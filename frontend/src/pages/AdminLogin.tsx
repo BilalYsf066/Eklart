@@ -1,0 +1,19 @@
+//import React from 'react'
+import { AdminLoginForm } from "@/components/admin-login-form";
+//import Navbar from "@/components/NavBar";
+
+export default function AdminLogin() {
+  return (
+    <div className="bg-white"> 
+      <div className="grid min-h-svh">
+        <div className="flex flex-col gap-4 p-6 md:p-10">
+          <div className="flex flex-1 items-center justify-center">
+            <div className="w-full max-w-sm">
+              <AdminLoginForm />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
