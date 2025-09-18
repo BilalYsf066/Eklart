@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Artisan\ArticleController as ArtisanArticleController;
 use App\Http\Controllers\Api\Artisan\OrderController as ArtisanOrderController;
+use App\Http\Controllers\Api\Artisan\DashboardController as ArtisanDashboardController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\CartController;
@@ -49,6 +50,7 @@ Route::prefix('auth')->group(function () {
 Route::middleware(['auth:sanctum'])->prefix('artisan')->group(function () {
     Route::post('/articles/{article}/publish', [ArtisanArticleController::class, 'publish']);
     Route::apiResource('articles', ArtisanArticleController::class);
+    Route::get('/stats', [ArtisanDashboardController::class, 'getStats']);
     Route::get('/orders', [ArtisanOrderController::class, 'index']);
     Route::put('/orders/{order}/status', [ArtisanOrderController::class, 'updateStatus']);
 });

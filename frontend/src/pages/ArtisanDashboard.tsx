@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import {
   BarChart,
   ShoppingCart,
-  Package,
+  Star,
   Edit,
   Trash,
   Plus,
@@ -30,7 +30,6 @@ import Navbar from '@/components/NavBar'
 import Footer from '@/components/Footer'
 import { api } from '@/lib/api'
 import { useAuth } from '@/contexts/AuthContext'
-import { Skeleton } from '@/components/ui/skeleton'
 
 // Types
 interface ArticleImage {
@@ -51,7 +50,7 @@ interface Product {
   category_id: number
   stock: number
   description: string
-  materials?: string[]
+  materials?: string | string[] | null
   dimensions?: string
   weight?: string
   images: ArticleImage[]
@@ -76,22 +75,17 @@ interface Order {
   status: string
 }
 
-// Données factices pour le tableau de bord (uniquement pour les stats)
-const dashboardData = {
-  stats: {
-    totalSales: 356000,
-    totalOrders: 24,
-    pendingOrders: 3,
-    viewsThisMonth: 427,
-    conversionRate: 5.6,
-  },
+interface DashboardStats {
+  totalSales: number
+  totalOrders: number
+  totalStars: number
+  viewsThisMonth: number
 }
 
 // Statuts de commande disponibles
 const orderStatuses = [
   "en attente", 
   "payée",
-  "en cours",
   "livré",
   "annulé",
 ]
@@ -100,6 +94,7 @@ const ArtisanDashboard = () => {
   const { user } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])
+  const [stats, setStats] = useState<DashboardStats | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -120,18 +115,20 @@ const ArtisanDashboard = () => {
   const fetchArtisanData = async () => {
     setIsLoading(true)
     try {
-        const [articlesRes, categoriesRes, ordersRes] = await Promise.all([
-            api.get('/artisan/articles'),
-            api.get('/categories'),
-            api.get('/artisan/orders')
-        ])
-        setProducts(articlesRes.data)
-        setCategories(categoriesRes.data)
-        setOrders(ordersRes.data)
+      const [articlesRes, categoriesRes, ordersRes, statsRes] = await Promise.all([
+        api.get('/artisan/articles'),
+        api.get('/categories'),
+        api.get('/artisan/orders'),
+        api.get('/artisan/stats')
+      ])
+      setProducts(articlesRes.data)
+      setCategories(categoriesRes.data)
+      setOrders(ordersRes.data)
+      setStats(statsRes.data)
     } catch (error) {
-        toast.error("Erreur", { description: "Impossible de charger les données du tableau de bord." })
+      toast.error("Erreur", { description: "Impossible de charger les données du tableau de bord." })
     } finally {
-        setIsLoading(false)
+      setIsLoading(false)
     }
   }
 
@@ -147,8 +144,13 @@ const ArtisanDashboard = () => {
     setProductCategoryId(String(product.category_id))
     setProductDescription(product.description || '')
     setProductStock(String(product.stock))
-    setProductMaterials(product.materials || [])
-    setMaterialsInput((product.materials || []).join(", "))
+    const mats = Array.isArray(product.materials)
+      ? product.materials
+      : typeof product.materials === 'string'
+        ? product.materials.split(',').map(m => m.trim()).filter(m => m.length > 0)
+        : []
+    setProductMaterials(mats)
+    setMaterialsInput(mats.join(", "))
     setProductDimensions(product.dimensions || '')
     setProductWeight(product.weight || '')
     setProductImages(null)
@@ -180,25 +182,25 @@ const ArtisanDashboard = () => {
     const validFiles = []
     
     for (let i = 0; i < files.length; i++) {
-        if (!validImageTypes.includes(files[i].type)) {
-            toast.error("Erreur", { 
-                description: `Le fichier ${files[i].name} n'est pas un format d'image valide.` 
-            })
-            continue
-        }
+      if (!validImageTypes.includes(files[i].type)) {
+        toast.error("Erreur", { 
+          description: `Le fichier ${files[i].name} n'est pas un format d'image valide.` 
+        })
+        continue
+      }
         
-        if (files[i].size > MAX_FILE_SIZE) {
-            toast.error("Erreur", { 
-                description: `Le fichier ${files[i].name} est trop volumineux (max 5MB).` 
-            })
-            continue
-        }
+      if (files[i].size > MAX_FILE_SIZE) {
+        toast.error("Erreur", { 
+          description: `Le fichier ${files[i].name} est trop volumineux (max 5MB).` 
+        })
+        continue
+      }
         
-        validFiles.push(files[i])
+      validFiles.push(files[i])
     }
     
     if (validFiles.length > 0) {
-        setProductImages(validFiles)
+      setProductImages(validFiles)
     }
   }
 
@@ -247,20 +249,20 @@ const ArtisanDashboard = () => {
     setIsLoading(true)
     try {
       if (currentProduct) {
-          formData.append('_method', 'PUT')
-          await api.post(`/artisan/articles/${currentProduct.id}`, formData, {
-              headers: {
-                  'Content-Type': 'multipart/form-data',
-              }
-          })
-          toast.success("Succès", { description: "Article mis à jour avec succès." })
+        formData.append('_method', 'PUT')
+        await api.post(`/artisan/articles/${currentProduct.id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          }
+        })
+        toast.success("Succès", { description: "Article mis à jour avec succès." })
       } else {
-          await api.post('/artisan/articles', formData, {
-              headers: {
-                  'Content-Type': 'multipart/form-data',
-              }
-          })
-          toast.success("Succès", { description: "Article ajouté avec succès." })
+        await api.post('/artisan/articles', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          }
+        })
+        toast.success("Succès", { description: "Article ajouté avec succès." })
       }
       
       await fetchArtisanData()
@@ -273,16 +275,16 @@ const ArtisanDashboard = () => {
         if (error.response?.data?.errors) {
           const errors = error.response.data.errors
           Object.keys(errors).forEach(key => {
-              errors[key].forEach((message: string) => {
-                  toast.error("Erreur de validation", { description: message })
-              })
+            errors[key].forEach((message: string) => {
+              toast.error("Erreur de validation", { description: message })
+            })
           })
         } else {
           const errorMsg = error.response?.data?.message || "Une erreur est survenue lors de l'envoi."
           toast.error("Erreur", { description: errorMsg })
         }
     } finally {
-        setIsLoading(false)
+      setIsLoading(false)
     }
   }
 
@@ -293,9 +295,9 @@ const ArtisanDashboard = () => {
       toast.success("Succès", { description: "Article publié avec succès." })
       await fetchArtisanData()
     } catch (error) {
-        toast.error("Erreur", { description: "Impossible de publier l'article." })
+      toast.error("Erreur", { description: "Impossible de publier l'article." })
     } finally {
-        setIsLoading(false)
+      setIsLoading(false)
     }
   }
 
@@ -306,30 +308,22 @@ const ArtisanDashboard = () => {
       toast.success("Succès", { description: "Article supprimé avec succès." })
       setProducts(products.filter((p) => p.id !== productId))
     } catch (error) {
-        toast.error("Erreur", { description: "Impossible de supprimer l'article." })
+      toast.error("Erreur", { description: "Impossible de supprimer l'article." })
     } finally {
-        setIsLoading(false)
+      setIsLoading(false)
     }
   }
 
   const handleUpdateOrderStatus = async (orderId: number, newStatus: string) => {
     try {
-        await api.put(`/artisan/orders/${orderId}/status`, { status: newStatus });
-        setOrders(orders.map(order => 
-            order.id === orderId ? { ...order, status: newStatus } : order
-        ));
-        toast.success("Statut de la commande mis à jour.");
+      await api.put(`/artisan/orders/${orderId}/status`, { status: newStatus })
+      setOrders(orders.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      ))
+      toast.success("Statut de la commande mis à jour.")
     } catch (error) {
-        toast.error("Erreur lors de la mise à jour du statut.");
+      toast.error("Erreur lors de la mise à jour du statut.")
     }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Skeleton className="h-20 w-20 rounded-full" />
-      </div>
-    );
   }
 
   return (
@@ -341,12 +335,12 @@ const ArtisanDashboard = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
               <div className="flex items-center">
                 <div>
-                <h1 className="text-2xl md:text-3xl font-bold">
+                  <h1 className="text-2xl md:text-3xl font-bold">
                     Tableau de bord
-                </h1>
-                <p className="text-foreground">
+                  </h1>
+                  <p className="text-foreground">
                     {user?.full_name} - {user?.artisan?.shop_name}
-                </p>
+                  </p>
                 </div>
               </div>
               <Button
@@ -366,7 +360,7 @@ const ArtisanDashboard = () => {
                     <div>
                       <p className="text-sm text-foreground">Ventes totales</p>
                       <p className="text-2xl font-bold">
-                        {dashboardData.stats.totalSales.toLocaleString()} FCFA
+                        {stats?.totalSales.toLocaleString() ?? 0} FCFA
                       </p>
                     </div>
                     <div className="p-3 bg-green-100 rounded-xs">
@@ -381,10 +375,10 @@ const ArtisanDashboard = () => {
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-sm text-foreground">
-                        Commandes totales
+                        Commandes
                       </p>
                       <p className="text-2xl font-bold">
-                        {dashboardData.stats.totalOrders}
+                        {stats?.totalOrders ?? 0}
                       </p>
                     </div>
                     <div className="p-3 bg-soko-cream rounded-xs">
@@ -398,14 +392,14 @@ const ArtisanDashboard = () => {
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-sm text-foreground">
-                        Commandes en attente
+                        Note totale
                       </p>
                       <p className="text-2xl font-bold">
-                        {dashboardData.stats.pendingOrders}
+                        {stats?.totalStars ?? 0}
                       </p>
                     </div>
                     <div className="p-3 bg-yellow-100 rounded-xs">
-                      <Package className="h-6 w-6 text-yellow-600" />
+                      <Star className="h-6 w-6 text-yellow-600" />
                     </div>
                   </div>
                 </CardContent>
@@ -417,7 +411,7 @@ const ArtisanDashboard = () => {
                     <div>
                       <p className="text-sm text-foreground">Vues ce mois</p>
                       <p className="text-2xl font-bold">
-                        {dashboardData.stats.viewsThisMonth}
+                        {stats?.viewsThisMonth ?? 'N/A'}
                       </p>
                     </div>
                     <div className="p-3 bg-blue-100 rounded-xs">
@@ -481,9 +475,7 @@ const ArtisanDashboard = () => {
                       <form className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="article-name">
-                            Nom de l'article *
-                            </Label>
+                            <Label htmlFor="article-name">Nom de l'article *</Label>
                             <Input
                               id="article-name"
                               placeholder="Nom de l'article"
@@ -504,9 +496,7 @@ const ArtisanDashboard = () => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="product-category">
-                              Catégorie *
-                            </Label>
+                            <Label htmlFor="product-category">Catégorie *</Label>
                             <Select
                               value={productCategoryId}
                               onValueChange={setProductCategoryId}
@@ -527,9 +517,7 @@ const ArtisanDashboard = () => {
                             </Select>
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="product-stock">
-                              Quantité en stock *
-                            </Label>
+                            <Label htmlFor="product-stock">Quantité en stock *</Label>
                             <Input
                               id="product-stock"
                               placeholder="Quantité disponible"
@@ -539,9 +527,7 @@ const ArtisanDashboard = () => {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="product-description">
-                            Description
-                          </Label>
+                          <Label htmlFor="product-description">Description</Label>
                           <Textarea
                             id="product-description"
                             placeholder="Description détaillée du produit"
@@ -554,9 +540,7 @@ const ArtisanDashboard = () => {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="product-materials">
-                              Matériaux (séparés par des virgules)
-                            </Label>
+                            <Label htmlFor="product-materials">Matériaux (séparés par des virgules)</Label>
                             <Input
                               id="product-materials"
                               placeholder="Ex: Bois, Métal, Coton"
@@ -578,9 +562,7 @@ const ArtisanDashboard = () => {
                             </div>
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="product-dimensions">
-                              Dimensions
-                            </Label>
+                            <Label htmlFor="product-dimensions">Dimensions</Label>
                             <Input
                               id="product-dimensions"
                               placeholder="Ex: 30x20x15 cm"
@@ -589,9 +571,7 @@ const ArtisanDashboard = () => {
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="product-weight">
-                              Poids
-                            </Label>
+                            <Label htmlFor="product-weight">Poids</Label>
                             <Input
                               id="product-weight"
                               placeholder="Ex: 1.5 kg"
@@ -633,58 +613,58 @@ const ArtisanDashboard = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {products.map((product) => (
-                        <Card
-                          key={product.id}
-                          className="overflow-hidden rounded-xs"
-                        >
-                          <div className="h-40 overflow-hidden bg-gray-200">
-                            {product.images && product.images.length > 0 ? (
-                                <img
-                                  src={product.images[0].image_path}
-                                  alt={product.name}
-                                  className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                  <Image />
-                                </div>
-                            )}
-                          </div>
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start mb-2">
-                              <h3 className="font-bold truncate pr-2">{product.name}</h3>
-                              <Badge
-                                variant={product.status === 'published' ? 'default' : 'secondary'}
-                                className={product.status === 'published' ? 'bg-green-600' : 'bg-gray-400'}
-                              >
-                                {product.status === 'published' ? 'Publié' : 'Brouillon'}
-                              </Badge>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {products.map((product) => (
+                      <Card
+                        key={product.id}
+                        className="overflow-hidden rounded-xs"
+                      >
+                        <div className="h-40 overflow-hidden bg-gray-200">
+                          {product.images && product.images.length > 0 ? (
+                            <img
+                              src={product.images[0].image_path}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-500">
+                              <Image />
                             </div>
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-soko-terracotta font-medium">
-                                {product.price.toLocaleString()} FCFA
-                              </span>
-                              <Badge
-                                className={
-                                  product.stock > 0 ? "bg-green-600" : "bg-red-600"
-                                }
+                          )}
+                        </div>
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="font-bold truncate pr-2">{product.name}</h3>
+                            <Badge
+                              variant={product.status === 'published' ? 'default' : 'secondary'}
+                              className={product.status === 'published' ? 'bg-green-600' : 'bg-gray-400'}
+                            >
+                              {product.status === 'published' ? 'Publié' : 'Brouillon'}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-soko-terracotta font-medium">
+                              {product.price.toLocaleString()} FCFA
+                            </span>
+                            <Badge
+                              className={
+                                product.stock > 0 ? "bg-green-600" : "bg-red-600"
+                              }
                               >
                                 {product.stock > 0 ? "En stock" : "Rupture"}
-                              </Badge>
-                            </div>
-                            <div className="flex justify-between items-center mt-4">
-                              {product.status === 'draft' && (
-                                <Button
-                                  size="sm"
-                                  className="bg-primary text-white text-xs"
-                                  onClick={() => handlePublishProduct(product.id)}
-                                  disabled={isLoading}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between items-center mt-4">
+                            {product.status === 'draft' && (
+                              <Button
+                                size="sm"
+                                className="bg-primary text-white text-xs"
+                                onClick={() => handlePublishProduct(product.id)}
+                                disabled={isLoading}
                               >
-                                  Publier
+                                Publier
                               </Button>
-                              )}
+                            )}
                             <div className="flex space-x-2 ml-auto">
                               <Button
                                 variant="outline"
@@ -703,11 +683,11 @@ const ArtisanDashboard = () => {
                                 <Trash className="h-4 w-4" />
                               </Button>
                             </div>
-                        </div>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
-                </div>
+                  </div>
                 )}
               </TabsContent>
 
@@ -782,8 +762,6 @@ const ArtisanDashboard = () => {
                                   ? "bg-blue-600"
                                   : order.status === "en attente"
                                   ? "bg-yellow-600"
-                                  : order.status === "en cours"
-                                  ? "bg-blue-600"
                                   : "bg-red-600"
                               }
                             >
