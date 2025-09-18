@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Separator } from "@/components/ui/separator"
@@ -12,6 +12,16 @@ import {
 } from "@/components/ui/breadcrumb"
 
 export default function Admin() {
+  const { pathname } = useLocation()
+  const labelMap: Record<string, string> = {
+    '/admin': 'Utilisateurs',
+    '/admin/users': 'Utilisateurs',
+    '/admin/categories': 'Catégories',
+    '/admin/orders': 'Commandes',
+    '/admin/articles': 'Articles',
+    '/admin/reviews': 'Avis',
+  }
+  const currentLabel = labelMap[pathname] ?? 'Utilisateurs'
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -31,7 +41,7 @@ export default function Admin() {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>Utilisateurs</BreadcrumbPage>
+                <BreadcrumbPage>{currentLabel}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
