@@ -12,21 +12,23 @@ const mockUsers: User[] = [
   {
     id: '1',
     name: 'Admin Eklart',
-    identifier: 'admin@eklart.com',
+    email: 'admin@eklart.com',
+    phone: '',
     status: 'active',
     role: 'admin',
   },
   {
     id: '2',
     name: 'Jean Soko',
-    identifier: 'jeansoko@gmail.com',
+    email: 'jeansoko@gmail.com',
+    phone: '+229 01 5566 7788',
     status: 'inactive',
     role: 'artisan',
   },
   {
     id: '3',
     name: 'Bob Johnson',
-    identifier: '+229 01 94 45 67 86',
+    phone: '+229 01 9900 1122',
     status: 'pending',
     role: 'client',
   },
@@ -61,7 +63,8 @@ export default function UserPage() {
     const newUser: User = {
       id: `user_${Date.now()}`,
       name: application.name,
-      identifier: application.identifier,
+      email: application.identifier,
+      phone: '',
       status: 'active',
       role: 'artisan'
     }
@@ -90,14 +93,16 @@ export default function UserPage() {
           >
             <Eye className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => console.log('Delete user:', user.id)}
-            title="Supprimer"
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </Button>
+          {user.role !== 'admin' && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => console.log('Delete user:', user.id)}
+              title="Supprimer"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button>
+          )}
         </div>
       )
     },
@@ -146,7 +151,7 @@ export default function UserPage() {
   return (
     <div className="flex flex-1 flex-col p-12">
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-[400px] grid-cols-2">
+        <TabsList className="grid w-[400px] grid-cols-2 rounded-xs">
           <TabsTrigger value="users">Utilisateurs</TabsTrigger>
           <TabsTrigger value="applications">Demandes</TabsTrigger>
         </TabsList>

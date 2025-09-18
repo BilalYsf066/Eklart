@@ -34,8 +34,8 @@ const data = {
     },
     {
       icon: Wallet,
-      title: "Transactions",
-      path: "/admin/transactions",
+      title: "Commandes",
+      path: "/admin/orders",
     },
     {
       icon: MessagesSquare,

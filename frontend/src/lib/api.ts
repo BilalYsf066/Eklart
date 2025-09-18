@@ -73,10 +73,6 @@ api.interceptors.response.use(
       
       // Clear token and redirect to login
       clearAuthToken()
-      
-      // Redirect based on route
-      const isAdminRoute = originalRequest.url?.includes('/admin')
-      window.location.href = isAdminRoute ? '/admin/login' : '/login'
     }
     
     return Promise.reject(error)

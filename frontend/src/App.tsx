@@ -13,9 +13,11 @@ import { Toaster } from "sonner"
 import ArtisanDashboard from "./pages/ArtisanDashboard"
 import Profile from "./pages/Profile"
 import Checkout from "./pages/Checkout"
-import UserPage from './pages/AdminPanelPages/UserPage';
-import ArticlePage from './pages/AdminPanelPages/ArticlePage';
-import ReviewPage from './pages/AdminPanelPages/ReviewPage';
+import UserPage from './pages/AdminPanelPages/UserPage'
+import ArticlePage from './pages/AdminPanelPages/ArticlePage'
+import ReviewPage from './pages/AdminPanelPages/ReviewPage'
+import CategoryPage from './pages/AdminPanelPages/CategoryPage'
+import OrderPage from './pages/AdminPanelPages/OrderPage'
 import ArtisanDetails from "./pages/ArtisanDetails"
 
 function App() {
@@ -34,6 +36,8 @@ function App() {
         <Route path="/admin" element={<Admin />}>
         <Route index element={<UserPage />} />
         <Route path="/admin/users" element={<UserPage />} />
+        <Route path="/admin/categories" element={<CategoryPage />} />
+        <Route path="/admin/orders" element={<OrderPage />} />
         <Route path="/admin/articles" element={<ArticlePage />} />
         <Route path="/admin/reviews" element={<ReviewPage />} />
         </Route>
