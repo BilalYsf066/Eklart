@@ -13,6 +13,37 @@ use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        if (!$user->client) {
+            return response()->json([]); // Return empty array if user has no client profile
+        }
+
+        $orders = Order::where('client_id', $user->client->id)
+            ->with('orderLines.article')
+            ->latest()
+            ->get();
+
+        $formattedOrders = $orders->map(function ($order) {
+            return [
+                'id' => $order->id,
+                'order_number' => $order->order_number,
+                'date' => $order->order_date->format('d/m/Y'),
+                'total' => (float) $order->total_amount,
+                'status' => $order->status,
+                'items' => $order->orderLines->map(function ($line) {
+                    return [
+                        'name' => $line->article->name,
+                        'quantity' => $line->quantity,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json($formattedOrders);
+    }
+    
     public function store(Request $request)
     {
         $user = Auth::user();

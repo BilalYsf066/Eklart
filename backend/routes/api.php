@@ -70,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // === Order Route ===
     Route::post('/orders', [OrderController::class, 'store']);
+    Route::get('/orders', [OrderController::class, 'index']);
 
     // === Profile Routes ===
     Route::prefix('profile')->group(function () {
