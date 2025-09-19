@@ -6,6 +6,7 @@ import Articles from "./pages/Articles"
 import ArticleDetails from "./pages/ArticleDetails"
 import Cart from "./pages/Cart"
 import Artisans from "./pages/Artisans"
+import ArtisanProfile from "./pages/ArtisanProfile"
 import Admin from "./pages/Admin"
 import { ProtectedRoute } from "./components/protected-route"
 import { Toaster } from "sonner"
@@ -17,7 +18,6 @@ import ArticlePage from './pages/AdminPanelPages/ArticlePage'
 import ReviewPage from './pages/AdminPanelPages/ReviewPage'
 import CategoryPage from './pages/AdminPanelPages/CategoryPage'
 import OrderPage from './pages/AdminPanelPages/OrderPage'
-import ArtisanDetails from "./pages/ArtisanDetails"
 import { AdminProtectedRoute } from "./components/admin-protected-route";
 import AdminLogin from "./pages/AdminLogin"
 import { AdminAuthProvider } from "./contexts/AdminAuthContext"
@@ -70,7 +70,7 @@ function App() {
           />
           <Route path="/cart" element={<Cart />} />
           <Route path="/artisans" element={<Artisans />} />
-          <Route path="/artisans/:id" element={<ArtisanDetails />} />
+          <Route path="/artisans/:slug" element={<ArtisanProfile />} />
           <Route
             path="/dashboard"
             element={
