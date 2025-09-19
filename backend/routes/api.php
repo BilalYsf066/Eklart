@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\Admin\ArticleController as AdminArticleController;
@@ -63,31 +64,43 @@ Route::middleware(['auth:sanctum'])->prefix('artisan')->group(function () {
 // === Admin Panel Routes ===
 // For now, they are protected by sanctum, later we will add an admin middleware
 Route::prefix('admin')->group(function () {
-    // Users
-    Route::get('/users', [AdminUserController::class, 'index']);
-    Route::delete('/users/{user}', [AdminUserController::class, 'destroy']);
-    Route::get('/artisan-applications', [AdminUserController::class, 'artisanApplications']);
-    Route::post('/artisan-applications/{artisan}/approve', [AdminUserController::class, 'approveArtisan']);
-    Route::post('/artisan-applications/{artisan}/reject', [AdminUserController::class, 'rejectArtisan']);
+    // Admin Auth Routes
+    Route::prefix('auth')->group(function () {
+        Route::post('/login', [AdminAuthController::class, 'login']);
+        Route::middleware('auth:admin-api')->group(function () {
+            Route::post('/logout', [AdminAuthController::class, 'logout']);
+            Route::get('/user', [AdminAuthController::class, 'user']);
+        });
+    });
+
+    // Protected Admin Routes
+    Route::middleware('auth:admin-api')->group(function () {
+        // Users
+        Route::get('/users', [AdminUserController::class, 'index']);
+        Route::delete('/users/{user}', [AdminUserController::class, 'destroy']);
+        Route::get('/artisan-applications', [AdminUserController::class, 'artisanApplications']);
+        Route::post('/artisan-applications/{artisan}/approve', [AdminUserController::class, 'approveArtisan']);
+        Route::post('/artisan-applications/{artisan}/reject', [AdminUserController::class, 'rejectArtisan']);
     
-    // Categories
-    Route::get('/categories', [AdminCategoryController::class, 'index']);
-    Route::post('/categories', [AdminCategoryController::class, 'store']);
-    Route::put('/categories/{category}', [AdminCategoryController::class, 'update']);
-    Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
+        // Categories
+        Route::get('/categories', [AdminCategoryController::class, 'index']);
+        Route::post('/categories', [AdminCategoryController::class, 'store']);
+        Route::put('/categories/{category}', [AdminCategoryController::class, 'update']);
+        Route::delete('/categories/{category}', [AdminCategoryController::class, 'destroy']);
 
-    // Articles
-    Route::get('/articles', [AdminArticleController::class, 'index']);
-    Route::post('/articles/{article}/toggle-visibility', [AdminArticleController::class, 'toggleVisibility']);
-    Route::delete('/articles/{article}', [AdminArticleController::class, 'destroy']);
+        // Articles
+        Route::get('/articles', [AdminArticleController::class, 'index']);
+        Route::post('/articles/{article}/toggle-visibility', [AdminArticleController::class, 'toggleVisibility']);
+        Route::delete('/articles/{article}', [AdminArticleController::class, 'destroy']);
 
-    // Orders
-    Route::get('/orders', [AdminOrderController::class, 'index']);
+        // Orders
+        Route::get('/orders', [AdminOrderController::class, 'index']);
 
-    // Reviews
-    Route::get('/reviews', [AdminReviewController::class, 'index']);
-    Route::post('/reviews/{review}/toggle-visibility', [AdminReviewController::class, 'toggleVisibility']);
-    Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy']);
+        // Reviews
+        Route::get('/reviews', [AdminReviewController::class, 'index']);
+        Route::post('/reviews/{review}/toggle-visibility', [AdminReviewController::class, 'toggleVisibility']);
+        Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy']);
+    });
 });
 
 // === Autres routes protégées de l'app ===

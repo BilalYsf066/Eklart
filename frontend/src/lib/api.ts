@@ -3,6 +3,7 @@ import axios from 'axios'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 const TOKEN_KEY = 'auth_token'
+const ADMIN_TOKEN_KEY = 'admin_auth_token'
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -14,40 +15,37 @@ export const api = axios.create({
   }
 })
 
-// Token management
-export const getAuthToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY)
-}
-
+// User Token management
+export const getAuthToken = (): string | null => localStorage.getItem(TOKEN_KEY)
 export const setAuthToken = (token: string): void => {
   localStorage.setItem(TOKEN_KEY, token)
-  api.defaults.headers.common['Authorization'] = `Bearer ${token}`
 }
+export const clearAuthToken = (): void => localStorage.removeItem(TOKEN_KEY)
 
-export const clearAuthToken = (): void => {
-  localStorage.removeItem(TOKEN_KEY)
-  delete api.defaults.headers.common['Authorization']
+// Admin Token management
+export const getAdminAuthToken = (): string | null => localStorage.getItem(ADMIN_TOKEN_KEY)
+export const setAdminAuthToken = (token: string): void => {
+  localStorage.setItem(ADMIN_TOKEN_KEY, token)
 }
+export const clearAdminAuthToken = (): void => localStorage.removeItem(ADMIN_TOKEN_KEY)
 
-// Add token to requests if it exists
 api.interceptors.request.use(
   (config) => {
-    const token = getAuthToken()
-    const isAdminRoute = config.url?.includes('/admin')
-    
-    // Only add token if it's not an admin route (admin uses different auth)
-    if (token && !isAdminRoute) {
-      config.headers.Authorization = `Bearer ${token}`
-    } else if (isAdminRoute && typeof config.headers.Authorization === 'string' && config.headers.Authorization.startsWith('Bearer ')) {
-      // Ensure we don't send user token to admin routes
-      delete config.headers.Authorization
+    const url = config.url || '';
+    if (url.startsWith('/admin')) {
+      const adminToken = getAdminAuthToken();
+      if (adminToken) {
+        config.headers.Authorization = `Bearer ${adminToken}`;
+      }
+    } else {
+      const token = getAuthToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
-    
-    return config
+    return config;
   },
-  (error) => {
-    return Promise.reject(error)
-  }
+  (error) => Promise.reject(error)
 )
 
 // Handle responses and auth errors

@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         //$middleware->statefulApi();
+        //$middleware->alias(['admin' => AdminMiddleware::class]); // <- en cas d'erreur Target class does not exist
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
