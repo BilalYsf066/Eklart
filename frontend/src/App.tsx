@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Register from "./pages/Register"
@@ -19,6 +19,7 @@ import ReviewPage from './pages/AdminPanelPages/ReviewPage'
 import CategoryPage from './pages/AdminPanelPages/CategoryPage'
 import OrderPage from './pages/AdminPanelPages/OrderPage'
 import ArtisanDetails from "./pages/ArtisanDetails"
+import NotFound from "./pages/NotFound"
 
 function App() {
   return (
@@ -71,7 +72,7 @@ function App() {
           }
         />
         <Route path="/profile" element={<Profile />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster 
         position="top-right"
