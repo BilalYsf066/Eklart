@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Link, useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { Eye, EyeOff } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 
 export function LoginForm({
@@ -22,6 +23,7 @@ export function LoginForm({
   const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -194,18 +196,29 @@ export function LoginForm({
         {/* Mot de passe */}
         <div className="grid gap-2">
           <Label htmlFor="password">Mot de passe *</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Votre mot de passe"
-            value={formData.password}
-            onChange={handleInputChange}
-            className={cn(
-              "h-10 rounded-xs",
-              errors.password ? "border-red-500" : ""
-            )}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Votre mot de passe"
+              value={formData.password}
+              onChange={handleInputChange}
+              className={cn(
+                "h-10 rounded-xs pr-10",
+                errors.password ? "border-red-500" : ""
+              )}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute inset-y-0 right-0 px-3 text-muted-foreground hover:text-foreground"
+              aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
           {errors.password && (
             <p className="text-red-500 text-xs">{errors.password}</p>
           )}

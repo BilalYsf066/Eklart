@@ -10,6 +10,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { useEffect, useRef, useState } from 'react'
+import { Bell, X } from 'lucide-react';
 
 export default function Admin() {
   const { pathname } = useLocation()
@@ -22,6 +24,20 @@ export default function Admin() {
     '/admin/reviews': 'Avis',
   }
   const currentLabel = labelMap[pathname] ?? 'Utilisateurs'
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+  const notificationRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setIsNotificationOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -45,6 +61,34 @@ export default function Admin() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+          <div className="ml-auto relative mr-2" ref={notificationRef}>
+            <button 
+              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+              className="relative rounded-full hover:bg-gray-100 p-1"
+              aria-label="Notifications"
+            >
+              <Bell size={20} className="text-foreground hover:text-primary active:text-primary" />
+            </button>
+            {isNotificationOpen && (
+              <div className="absolute right-0 mt-2 w-72 bg-white rounded-xs shadow-lg ring-none z-50">
+                <div className="p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-medium text-gray-900">Notifications</h3>
+                    <button 
+                      onClick={() => setIsNotificationOpen(false)}
+                      className="text-gray-400 hover:text-gray-500"
+                      aria-label="Close notifications"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                  <div className="text-sm text-muted-foreground py-4 text-center">
+                    Les notifications arrivent bientôt.
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </header>
         <Outlet />
       </SidebarInset>

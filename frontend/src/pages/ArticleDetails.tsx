@@ -278,7 +278,7 @@ const ArticleDetails = () => {
                 </div>
                 <Separator className="my-6" />
                 <Tabs defaultValue="details">
-                  <TabsList className="w-full">
+                  <TabsList className="w-full rounded-xs">
                     <TabsTrigger value="details" className="flex-1">Détails</TabsTrigger>
                     <TabsTrigger value="shipping" className="flex-1">Livraison</TabsTrigger>
                     <TabsTrigger value="returns" className="flex-1">Retours</TabsTrigger>
@@ -327,7 +327,7 @@ const ArticleDetails = () => {
                       <div key={slideIndex} className="w-full flex-shrink-0">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           {reviews.slice(slideIndex * reviewsPerSet, (slideIndex + 1) * reviewsPerSet).map((review) => (
-                            <Card key={review.id} className="border h-full">
+                            <Card key={review.id} className="border h-full rounded-xs">
                               <CardContent className="p-6 h-full flex flex-col">
                                 <div className="flex-1">
                                   <div className="flex items-center justify-between mb-4">
@@ -348,31 +348,31 @@ const ArticleDetails = () => {
               </div>
 
                {/* Add Review Section */}
-                <div className="mt-12">
-                    <h3 className="text-xl font-bold mb-4">Laisser un avis</h3>
-                    {isAuthenticated ? (
-                        <Card>
-                            <CardContent className="pt-6">
-                                <ReviewForm articleId={product.id} onReviewSubmitted={handleReviewSubmitted} />
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <Card className="text-center">
-                            <CardContent className="pt-6">
-                                <p className="text-muted-foreground">
-                                    Vous devez être <Link to="/login" className="text-primary hover:underline">connecté</Link> pour laisser un avis.
-                                </p>
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
+              <div className="mt-12">
+                <h3 className="text-xl font-bold mb-4">Laisser un avis</h3>
+                {isAuthenticated ? (
+                  <Card className="rounded-xs w-[50%]">
+                    <CardContent className="pt-6">
+                      <ReviewForm articleId={product.id} onReviewSubmitted={handleReviewSubmitted} />
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="text-center rounded-xs w-[50%]">
+                    <CardContent className="pt-6">
+                      <p className="text-muted-foreground">
+                        Vous devez être <Link to="/login" className="text-primary hover:underline">connecté</Link> pour laisser un avis.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
           </div>
         </main>
       </div>
       <Footer />
     </div>
-  );
-};
+  )
+}
 
 export default ArticleDetails

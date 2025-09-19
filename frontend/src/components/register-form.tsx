@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { Link, useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { Eye, EyeOff } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { type RegisterData } from "@/services/authService"
 
@@ -30,6 +31,8 @@ export function RegisterForm({
     identityDocument: null as File | null,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -279,18 +282,29 @@ export function RegisterForm({
         {/* Mot de passe */}
         <div className="grid gap-2">
           <Label htmlFor="password">Mot de passe *</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Votre mot de passe"
-            value={formData.password}
-            onChange={handleInputChange}
-            className={cn(
-              "h-10 rounded-xs",
-              errors.password ? "border-red-500" : ""
-            )}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Votre mot de passe"
+              value={formData.password}
+              onChange={handleInputChange}
+              className={cn(
+                "h-10 rounded-xs pr-10",
+                errors.password ? "border-red-500" : ""
+              )}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute inset-y-0 right-0 px-3 text-muted-foreground hover:text-foreground"
+              aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
           {errors.password && (
             <p className="text-red-500 text-xs">{errors.password}</p>
           )}
@@ -299,18 +313,29 @@ export function RegisterForm({
         {/* Confirmation mot de passe */}
         <div className="grid gap-2">
           <Label htmlFor="confirmPassword">Confirmer le mot de passe *</Label>
-          <Input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            placeholder="Confirmez votre mot de passe"
-            value={formData.confirmPassword}
-            onChange={handleInputChange}
-            className={cn(
-              "h-10 rounded-xs",
-              errors.confirmPassword ? "border-red-500" : ""
-            )}
-          />
+          <div className="relative">
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirmez votre mot de passe"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              className={cn(
+                "h-10 rounded-xs pr-10",
+                errors.confirmPassword ? "border-red-500" : ""
+              )}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((s) => !s)}
+              className="absolute inset-y-0 right-0 px-3 text-muted-foreground hover:text-foreground"
+              aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+              title={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
           {errors.confirmPassword && (
             <p className="text-red-500 text-xs">{errors.confirmPassword}</p>
           )}

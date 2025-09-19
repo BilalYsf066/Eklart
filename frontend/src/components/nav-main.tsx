@@ -22,7 +22,7 @@ export function NavMain({
         {items.map((item) => (
           <SidebarMenuItem key={item.title}>
             <Link to={item.path} className="w-full">
-              <SidebarMenuButton className="w-full text-left">
+              <SidebarMenuButton className="w-full text-left text-base ml-2 mt-2">
                 <item.icon className="mr-2 size-4" />
                 {item.title}
               </SidebarMenuButton>

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Container, GalleryVerticalEnd, MessagesSquare, Package, Settings, Users, Wallet } from "lucide-react"
+import { Container, MessagesSquare, Package, Settings, Users, Wallet } from "lucide-react"
 import { NavMain } from "@/components/nav-main"
 import {
   Sidebar,
@@ -66,19 +66,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <a href="/admin">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <GalleryVerticalEnd className="size-4" />
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-bold">Eklart</span>
-                  <span className="">Admin</span>
+                <div className="flex flex-col gap-0.5 leading-none mt-2 ml-2">
+                  <span className="font-bold text-xl">Eklart</span>
+                  <span className="text-sm">Admin</span>
                 </div>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="mt-4">
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
