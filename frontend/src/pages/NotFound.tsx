@@ -8,7 +8,7 @@ export default function NotFound() {
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
-      <main className="flex-1 container mx-auto px-4 py-16">
+      <main className="flex-1 container mx-auto my-48 px-4">
         <div className="mx-auto max-w-xl text-center">
           <div className="inline-flex items-center justify-center rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-medium">
             Erreur 404

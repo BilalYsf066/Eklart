@@ -12,6 +12,7 @@ class Review extends Model
         'article_id',
         'rating',
         'comment',
+        'visible'
     ];
 
     public function client()

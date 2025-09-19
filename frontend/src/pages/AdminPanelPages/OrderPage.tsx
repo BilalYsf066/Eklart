@@ -1,65 +1,51 @@
-import { useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable } from '@/components/data-table'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Eye } from 'lucide-react'
+import { api } from '@/lib/api'
+import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
 
 export type Order = {
   id: string
-  date: string // ISO date string
+  date: string
   orderNumber: string
   customerName: string
   method: string
   amount: number
-  status: 'pending' | 'paid' | 'delivered' | 'cancelled'
+  status: 'en attente' | 'payée' | 'livré' | 'annulé'
 }
 
-const mockOrders: Order[] = [
-  {
-    id: 'ord_1',
-    date: '2025-09-12T11:20:00Z',
-    orderNumber: 'CMD-2025-0001',
-    customerName: 'Alice K.',
-    method: 'Mobile Money',
-    amount: 24500,
-    status: 'paid',
-  },
-  {
-    id: 'ord_2',
-    date: '2025-09-14T09:05:00Z',
-    orderNumber: 'CMD-2025-0002',
-    customerName: 'Marc D.',
-    method: 'Carte bancaire',
-    amount: 120000,
-    status: 'pending',
-  },
-  {
-    id: 'ord_3',
-    date: '2025-09-17T16:42:00Z',
-    orderNumber: 'CMD-2025-0003',
-    customerName: 'Zoé P.',
-    method: 'PayPal',
-    amount: 38000,
-    status: 'delivered',
-  },
-]
-
 export default function OrderPage() {
-  const [orders] = useState<Order[]>(mockOrders)
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
   const [current, setCurrent] = useState<Order | null>(null)
+  
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true)
+      try {
+        const response = await api.get('/admin/orders')
+        setOrders(response.data)
+      } catch (error) {
+        toast.error("Erreur lors de la récupération des commandes.")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchOrders()
+  }, [])
+
   const currency = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' })
 
-  const columns: ColumnDef<Order>[] = [
+  const columns: ColumnDef<Order>[] = useMemo(() => [
     {
       accessorKey: 'date',
       header: 'Date',
-      cell: ({ getValue }) => {
-        const v = getValue<string>()
-        const d = new Date(v)
-        return isNaN(d.getTime()) ? '-' : d.toLocaleString('fr-FR')
-      },
+      cell: ({ getValue }) => new Date(getValue<string>()).toLocaleString('fr-FR'),
     },
     { accessorKey: 'orderNumber', header: 'Commande' },
     { accessorKey: 'customerName', header: 'Client' },
@@ -69,7 +55,20 @@ export default function OrderPage() {
       header: 'Montant',
       cell: ({ getValue }) => currency.format(getValue<number>()),
     },
-    { accessorKey: 'status', header: 'Statut' },
+    { 
+      accessorKey: 'status', 
+      header: 'Statut',
+      cell: ({ getValue }) => {
+        const status = getValue<Order['status']>()
+        const statusClasses = {
+          'livré': 'bg-green-600',
+          'payée': 'bg-blue-600',
+          'en attente': 'bg-yellow-500',
+          'annulé': 'bg-red-600',
+        }[status]
+        return <Badge className={statusClasses}>{status}</Badge>
+      }
+    },
     {
       id: 'actions',
       header: '',
@@ -87,13 +86,16 @@ export default function OrderPage() {
       ),
       meta: { className: 'text-right' },
     },
-  ]
+  ], [])
 
   return (
     <div className="flex flex-1 flex-col p-12 gap-4">
       <h1 className="text-3xl font-bold">Commandes</h1>
-      <DataTable columns={columns} data={orders} />
-
+      {loading ? (
+        <p className="text-muted-foreground">Chargement...</p>
+      ) : (
+        <DataTable columns={columns} data={orders} />
+      )}
       <Dialog open={open} onOpenChange={(o) => { if (!o) setCurrent(null); setOpen(o) }}>
         <DialogContent>
           <DialogHeader>

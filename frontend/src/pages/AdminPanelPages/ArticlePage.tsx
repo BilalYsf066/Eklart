@@ -1,85 +1,79 @@
-import { useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { DataTable } from '@/components/data-table'
 import { Button } from '@/components/ui/button'
 import { Eye, EyeOff, Trash2 } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
+import { api } from '@/lib/api'
+import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
 
-// Type definition for an article
 type Article = {
   id: string
   name: string
   price: number
   quantity: number
   artisan: string
-  addedAt: string // ISO date string
+  addedAt: string
   imageUrl: string
   visible: boolean
   category: string
 }
 
-// Mock data - replace with real API call
-const mockArticles: Article[] = [
-  {
-    id: 'art_1',
-    name: 'Tabouret en bois',
-    price: 15000,
-    quantity: 12,
-    artisan: 'Atelier Bois & Fer',
-    addedAt: '2025-08-21T10:24:00Z',
-    imageUrl: 'https://images.unsplash.com/photo-1598300053650-5b89351aff97?q=80&w=600&auto=format&fit=crop',
-    visible: true,
-    category: 'Mobilier',
-  },
-  {
-    id: 'art_2',
-    name: 'Poterie décorative',
-    price: 9500,
-    quantity: 7,
-    artisan: 'Artisanat Créatif',
-    addedAt: '2025-09-01T08:10:00Z',
-    imageUrl: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31b2?q=80&w=600&auto=format&fit=crop',
-    visible: false,
-    category: 'Décoration',
-  },
-  {
-    id: 'art_3',
-    name: 'Tapis tissé à la main',
-    price: 42000,
-    quantity: 3,
-    artisan: 'Maison du Tissage',
-    addedAt: '2025-09-10T15:45:00Z',
-    imageUrl: 'https://images.unsplash.com/photo-1615874694520-474822394e73?q=80&w=600&auto=format&fit=crop',
-    visible: true,
-    category: 'Textiles',
-  },
-]
-
 export default function ArticlePage() {
-  const [articles, setArticles] = useState<Article[]>(mockArticles)
-
-  const toggleVisibility = (id: string) => {
-    setArticles(prev => prev.map(a => a.id === id ? { ...a, visible: !a.visible } : a))
+  const [articles, setArticles] = useState<Article[]>([])
+  const [loading, setLoading] = useState(true)
+  
+  const fetchArticles = async () => {
+    setLoading(true)
+    try {
+      const response = await api.get('/admin/articles')
+      setArticles(response.data)
+    } catch (error) {
+      toast.error("Erreur lors de la récupération des articles.")
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const deleteArticle = (id: string) => {
-    setArticles(prev => prev.filter(a => a.id !== id))
+  useEffect(() => {
+    fetchArticles()
+  }, [])
+
+  const toggleVisibility = async (id: string, currentVisibility: boolean) => {
+    // Optimistic update
+    setArticles(prev => prev.map(a => a.id === id ? { ...a, visible: !currentVisibility } : a))
+    try {
+      await api.post(`/admin/articles/${id}/toggle-visibility`)
+      toast.success(`Visibilité de l'article mise à jour.`)
+    } catch (error) {
+      toast.error("Erreur lors de la mise à jour.")
+      // Revert on error
+      setArticles(prev => prev.map(a => a.id === id ? { ...a, visible: currentVisibility } : a))
+    }
   }
 
-  // Currency formatter (XOF for West Africa). Adjust as needed.
+  const deleteArticle = async (id: string) => {
+    try {
+      await api.delete(`/admin/articles/${id}`)
+      toast.success("Article supprimé avec succès.")
+      setArticles(prev => prev.filter(a => a.id !== id))
+    } catch (error) {
+      toast.error("Erreur lors de la suppression de l'article.")
+    }
+  }
+
   const currency = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' })
 
-  const columns: ColumnDef<Article>[] = [
+  const columns: ColumnDef<Article>[] = useMemo(() => [
     {
       accessorKey: 'imageUrl',
       header: 'Photo',
       cell: ({ row: { original } }) => (
-        <div className="flex items-center">
-          <img
-            src={original.imageUrl}
-            alt={original.name}
-            className="h-12 w-12 rounded object-cover border"
-          />
-        </div>
+        <img
+          src={original.imageUrl || 'https://via.placeholder.com/50'}
+          alt={original.name}
+          className="h-12 w-12 rounded object-cover border"
+        />
       ),
     },
     { accessorKey: 'name', header: 'Nom' },
@@ -88,17 +82,17 @@ export default function ArticlePage() {
       header: 'Prix',
       cell: ({ getValue }) => currency.format(getValue<number>()),
     },
-    { accessorKey: 'quantity', header: 'Quantité' },
+    { accessorKey: 'quantity', header: 'Stock' },
     { accessorKey: 'artisan', header: 'Artisan' },
     { accessorKey: 'category', header: 'Catégorie' },
     {
-      accessorKey: 'addedAt',
-      header: "Date d'ajout",
-      cell: ({ getValue }) => {
-        const v = getValue<string>()
-        const d = new Date(v)
-        return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('fr-FR')
-      },
+      accessorKey: 'visible',
+      header: 'Statut',
+      cell: ({ getValue }) => (
+        <Badge variant={getValue<boolean>() ? 'default' : 'secondary'} className={getValue<boolean>() ? 'bg-green-600' : ''}>
+          {getValue<boolean>() ? 'Publié' : 'Brouillon'}
+        </Badge>
+      )
     },
     {
       id: 'actions',
@@ -108,14 +102,10 @@ export default function ArticlePage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => toggleVisibility(original.id)}
+            onClick={() => toggleVisibility(original.id, original.visible)}
             title={original.visible ? 'Masquer' : 'Afficher'}
           >
-            {original.visible ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
+            {original.visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
           <Button
             variant="ghost"
@@ -129,12 +119,16 @@ export default function ArticlePage() {
       ),
       meta: { className: 'text-right' },
     },
-  ]
+  ], [])
 
   return (
     <div className="flex flex-1 flex-col p-12 gap-4">
       <h1 className="text-3xl font-bold">Articles</h1>
-      <DataTable columns={columns} data={articles} />
+      {loading ? (
+        <p className="text-muted-foreground">Chargement...</p>
+      ) : (
+        <DataTable columns={columns} data={articles} />
+      )}
     </div>
   )
 }
