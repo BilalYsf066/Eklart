@@ -1,4 +1,4 @@
-import { CheckCircle2, ShoppingBag, Mail, Clock } from "lucide-react"
+import { CheckCircle2, ShoppingBag, Mail, Clock, Wallet } from "lucide-react"
 import { Button } from "./ui/button"
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card"
 import { Separator } from "./ui/separator"
@@ -19,12 +19,12 @@ interface OrderDetails {
   total: number
 }
 
-interface PaymentSuccessProps {
+interface OrderSuccessProps {
   order: OrderDetails | null
   onClose: () => void
 }
 
-export default function PaymentSuccess({ order, onClose }: PaymentSuccessProps) {
+export default function OrderSuccess({ order, onClose }: OrderSuccessProps) {
   if (!order) {
     return null // or a loading/error state
   }
@@ -99,6 +99,17 @@ export default function PaymentSuccess({ order, onClose }: PaymentSuccessProps) 
               <div>
                 <p className="text-sm">
                   Vous pouvez suivre l'état de votre commande dans la section "Mes commandes" de votre compte.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 p-4 rounded-md space-y-3">
+            <div className="flex items-start gap-3">
+              <Wallet className="h-5 w-5 mt-0.5 text-blue-600 flex-shrink-0" />
+              <div>
+                <p className="text-sm">
+                  Une fois livré, veuillez accuser réception de votre colis pour effectuer le paiement.
                 </p>
               </div>
             </div>

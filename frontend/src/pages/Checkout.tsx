@@ -6,21 +6,19 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import NavBar from "@/components/NavBar"
 import Footer from "@/components/Footer"
-import PaymentSuccess from "@/components/PaymentSuccess"
-import { ShoppingCart, MapPin, Mail, CreditCard } from "lucide-react"
+import { ShoppingCart, MapPin, Mail } from "lucide-react"
 import { useCart } from "@/hooks/use-cart"
 import { useAuth } from "@/contexts/AuthContext"
 import { api } from "@/lib/api"
 import { toast } from "sonner"
 import { useNavigate } from "react-router-dom"
+import OrderSuccess from "@/components/OrderSuccess"
 
 const checkoutSchema = z.object({
   firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
@@ -39,28 +37,20 @@ const checkoutSchema = z.object({
 type CheckoutFormData = z.infer<typeof checkoutSchema>
 
 interface OrderItem {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
+  id: number
+  name: string
+  price: number
+  quantity: number
 }
 
 interface OrderDetails {
-  orderNumber: string;
-  date: string;
-  items: OrderItem[];
-  subtotal: number;
-  shipping: number;
-  total: number;
+  orderNumber: string
+  date: string
+  items: OrderItem[]
+  subtotal: number
+  shipping: number
+  total: number
 }
-
-const paymentMethods = [
-  { id: "mtn_money", name: "MTN Mobile Money", icon: "📱", description: "Paiement mobile MTN" },
-  { id: "moov_money", name: "Moov Money", icon: "📱", description: "Paiement mobile Moov" },
-  { id: "celtiis_cash", name: "Celtiis Cash", icon: "📱", description: "Paiement mobile Celtiis" },
-  { id: "kkiapay", name: "Kkiapay", icon: "🌊", description: "Portefeuille numérique Kkiapay" },
-  { id: "card", name: "Carte bancaire", icon: "💳", description: "Visa, Mastercard" },
-]
 
 const Checkout = () => { 
   const { user } = useAuth()
@@ -81,7 +71,6 @@ const Checkout = () => {
       address: "",
       city: "",
       postalCode: "",
-      paymentMethod: "mtn_money",
       notes: "",
     },
   })
@@ -95,7 +84,6 @@ const Checkout = () => {
         phone: user.phone || "",
         address: "", // Will be fetched if client profile exists
         city: "", // Will be fetched if client profile exists
-        paymentMethod: "mtn_money",
         notes: "",
       })
 
@@ -288,51 +276,7 @@ const Checkout = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Payment Method */}
-                  <Card className="rounded-xs">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <CreditCard className="h-5 w-5 text-primary" />
-                        Mode de paiement
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <FormField
-                        control={form.control}
-                        name="paymentMethod"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <RadioGroup
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                                className="space-y-3"
-                              >
-                                {paymentMethods.map((method) => (
-                                  <div key={method.id} className="flex items-center space-x-3 p-3 border border-border rounded-xs hover:bg-muted/50 transition-colors">
-                                    <RadioGroupItem value={method.id} id={method.id} />
-                                    <Label 
-                                      htmlFor={method.id}
-                                      className="flex items-center gap-3 cursor-pointer flex-1"
-                                    >
-                                      <span className="text-2xl">{method.icon}</span>
-                                      <div>
-                                        <div className="font-medium">{method.name}</div>
-                                        <div className="text-sm text-muted-foreground">
-                                          {method.description}
-                                        </div>
-                                      </div>
-                                    </Label>
-                                  </div>
-                                ))}
-                              </RadioGroup>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </CardContent>
-                  </Card>
+                  
 
                   {/* Notes */}
                   <Card className="rounded-xs">
@@ -447,7 +391,7 @@ const Checkout = () => {
       {/* Payment Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-[625px] p-0 overflow-hidden">
-          <PaymentSuccess order={processedOrder} onClose={() => {
+          <OrderSuccess order={processedOrder} onClose={() => {
             setShowSuccessDialog(false)
             navigate('/')
           }} />
