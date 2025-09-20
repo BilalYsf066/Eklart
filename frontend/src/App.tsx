@@ -18,7 +18,7 @@ import ArticlePage from './pages/AdminPanelPages/ArticlePage'
 import ReviewPage from './pages/AdminPanelPages/ReviewPage'
 import CategoryPage from './pages/AdminPanelPages/CategoryPage'
 import OrderPage from './pages/AdminPanelPages/OrderPage'
-import { AdminProtectedRoute } from "./components/admin-protected-route";
+import { AdminProtectedRoute } from "./components/admin-protected-route"
 import AdminLogin from "./pages/AdminLogin"
 import { AdminAuthProvider } from "./contexts/AdminAuthContext"
 import NotFound from "./pages/NotFound"

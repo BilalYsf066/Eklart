@@ -221,7 +221,7 @@ export default function Profile() {
             <section className="space-y-8">
               {activeTab === 'profil' ? (
                 <>
-                  <Card className="rounded-xs">
+                  <Card className="rounded-xs bg-white">
                     <CardHeader>
                       <div className="flex flex-col items-center space-y-4">
                         <Avatar className="h-24 w-24">
@@ -237,8 +237,10 @@ export default function Profile() {
                     </CardHeader>
                   </Card>
 
-                  <Card className="rounded-xs">
-                    <CardHeader><CardTitle>Informations Personnelles</CardTitle></CardHeader>
+                  <Card className="rounded-xs bg-white">
+                    <CardHeader>
+                        <CardTitle>Informations Personnelles</CardTitle>
+                    </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -292,7 +294,7 @@ export default function Profile() {
                   </Card>
 
                   {user?.role === 'CLIENT' && (
-                    <Card className="rounded-xs">
+                    <Card className="rounded-xs bg-white">
                       <CardHeader>
                         <CardTitle>Adresse de livraison</CardTitle>
                       </CardHeader>
@@ -323,7 +325,7 @@ export default function Profile() {
                     </Card>
                   )}
                   {user?.role === 'ARTISAN' && (
-                    <Card className="rounded-xs">
+                    <Card className="rounded-xs bg-white">
                       <CardHeader>
                         <CardTitle>Informations de la boutique</CardTitle>
                       </CardHeader>
@@ -356,7 +358,7 @@ export default function Profile() {
                     </Card>
                   )}
 
-                  <Card className="rounded-xs">
+                  <Card className="rounded-xs bg-white">
                     <CardHeader>
                       <CardTitle>Sécurité</CardTitle>
                     </CardHeader>
@@ -430,7 +432,7 @@ export default function Profile() {
                 </>
               ) : (
                 <>
-                  <Card className="rounded-xs">
+                  <Card className="rounded-xs bg-white">
                     <CardHeader>
                       <CardTitle>Historique des commandes</CardTitle>
                     </CardHeader>
