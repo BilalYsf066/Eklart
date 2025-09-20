@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useLocation } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import NavBar from "@/components/NavBar"
 import Footer from "@/components/Footer"
 import ArticleCard from "@/components/ArticleCard"
@@ -35,6 +35,7 @@ interface Category {
 
 const Articles = () => {
   const location = useLocation()
+  const navigate = useNavigate()
   const queryParams = new URLSearchParams(location.search)
   const categoryParam = queryParams.get("category")
   
@@ -105,6 +106,28 @@ const Articles = () => {
 
     setFilteredArticles(result)
   }, [selectedCategory, sortBy, priceRange, showNew, articles])
+
+  useEffect(() => {
+    if (!categoryParam || categories.length === 0) return
+    const byId = categories.find((c) => String(c.id) === categoryParam)
+    if (byId && selectedCategory.toLowerCase() !== byId.name.toLowerCase()) {
+      setSelectedCategory(byId.name)
+    }
+  }, [categoryParam, categories])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (!selectedCategory || selectedCategory === 'all') {
+      params.delete('category')
+    } else {
+      params.set('category', selectedCategory)
+    }
+    const nextSearch = params.toString()
+    const currentSearch = location.search.startsWith('?') ? location.search.substring(1) : location.search
+    if (nextSearch !== currentSearch) {
+      navigate({ pathname: location.pathname, search: nextSearch ? `?${nextSearch}` : '' }, { replace: true })
+    }
+  }, [selectedCategory])
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -103,7 +103,7 @@ const NavBar = () => {
                     <li>
                       {categories.map((category) => (
                         <NavigationMenuLink key={category.id} asChild>
-                          <Link to={`/articles?category=${category.id}`}>
+                          <Link to={`/articles?category=${encodeURIComponent(category.name)}`}>
                             <div className="font-medium">{category.name}</div>
                           </Link>
                         </NavigationMenuLink>
