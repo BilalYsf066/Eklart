@@ -97,20 +97,20 @@ const Checkout = () => {
         city: "", // Will be fetched if client profile exists
         paymentMethod: "mtn_money",
         notes: "",
-      });
+      })
 
       // Fetch client address info
       const fetchClientInfo = async () => {
-          try {
-            // A dedicated endpoint would be better, but we can reuse the profile one
-            const response = await api.get('/profile');
-            if(response.data.client) {
-              form.setValue('address', response.data.client.address || '');
-              form.setValue('city', response.data.client.city || '');
-            }
-          } catch (error) {
-              console.warn("Could not fetch client address info");
+        try {
+          // A dedicated endpoint would be better, but we can reuse the profile one
+          const response = await api.get('/profile')
+          if(response.data.client) {
+            form.setValue('address', response.data.client.address || '')
+            form.setValue('city', response.data.client.city || '')
           }
+        } catch (error) {
+          console.warn("Could not fetch client address info")
+        }
       }
       fetchClientInfo();
     }
@@ -136,9 +136,9 @@ const Checkout = () => {
       setShowSuccessDialog(true)
       _clearLocalCart()
     } catch (error: any) {
-        toast.error("Erreur", {
-            description: error.response?.data?.message || "Une erreur est survenue lors de la commande."
-        })
+      toast.error("Erreur", {
+        description: error.response?.data?.message || "Une erreur est survenue lors de la commande."
+      })
     } finally {
       setIsProcessing(false)
     }

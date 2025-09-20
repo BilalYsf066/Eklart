@@ -11,7 +11,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { useEffect, useRef, useState } from 'react'
-import { Bell, X } from 'lucide-react';
+import { Bell, X } from 'lucide-react'
 
 export default function Admin() {
   const { pathname } = useLocation()

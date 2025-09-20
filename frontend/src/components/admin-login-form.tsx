@@ -48,16 +48,22 @@ export function AdminLoginForm({ className, ...props }: React.ComponentProps<"fo
           {error && <p className="text-sm text-red-500 text-center">{error}</p>}
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">Mot de passe</Label>
             <div className="relative">
-              <Input 
-                id="password" 
-                type={showPassword ? "text" : "password"} 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required 
                 className="pr-10"
               />
@@ -74,7 +80,11 @@ export function AdminLoginForm({ className, ...props }: React.ComponentProps<"fo
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Checkbox id="remember" checked={rememberMe} onCheckedChange={(c) => setRememberMe(!!c)} />
+              <Checkbox
+                id="remember"
+                checked={rememberMe}
+                onCheckedChange={(c) => setRememberMe(!!c)}
+              />
               <Label htmlFor="remember" className="text-sm">Se souvenir de moi</Label>
             </div>
           </div>

@@ -139,12 +139,12 @@ export const useCart = create<CartStore>()(
       name: "eklart-cart",
       onRehydrateStorage: () => (state) => {
         if (state) {
-            const token = getAuthToken()
-            if (token) {
-                // If user is authenticated on load, we prioritize server cart.
-                // We'll merge the persisted local cart right after authentication check.
-                state._clearLocalCart()
-            }
+          const token = getAuthToken()
+          if (token) {
+            // If user is authenticated on load, we prioritize server cart.
+            // We'll merge the persisted local cart right after authentication check.
+            state._clearLocalCart()
+          }
         }
       }
     }
