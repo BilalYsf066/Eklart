@@ -213,7 +213,7 @@ const MOCK_ARTICLES = [
     category: "Bijoux",
     artisanId: 2
   }
-];
+]
 
 const ArtisanProfile = () => {
   const { slug } = useParams<{ slug: string }>()
