@@ -93,9 +93,9 @@ const Artisans = () => {
   const [artisans] = useState(MOCK_ARTISANS)
   const [filteredArtisans, setFilteredArtisans] = useState(MOCK_ARTISANS)
   const [searchQuery, setSearchQuery] = useState("")
-  const [shopName, setShopName] = useState("all")
+  const [locationFilter, setLocationFilter] = useState("all")
 
-  // Filter artisans based on search and specialty
+  // Filter artisans based on search and location
   const handleFilter = () => {
     let result = [...artisans]
     
@@ -109,10 +109,10 @@ const Artisans = () => {
       )
     }
     
-    // Filter by specialty
-    if (shopName !== "all") {
+    // Filter by location
+    if (locationFilter !== "all") {
       result = result.filter(
-        artisan => artisan.shopName.toLowerCase() === shopName.toLowerCase()
+        artisan => artisan.location.toLowerCase() === locationFilter.toLowerCase()
       )
     }
     
@@ -125,9 +125,9 @@ const Artisans = () => {
     handleFilter()
   }
 
-  // Handle specialty change
-  const handleShopNameChange = (value: string) => {
-    setShopName(value)
+  // Handle location change
+  const handleLocationChange = (value: string) => {
+    setLocationFilter(value)
     setTimeout(() => {
       handleFilter()
     }, 0)
@@ -162,19 +162,17 @@ const Artisans = () => {
                   />
                 </div>
                 <div className="md:w-48">
-                  <Select value={shopName} onValueChange={handleShopNameChange}>
+                  <Select value={locationFilter} onValueChange={handleLocationChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Spécialité" />
+                      <SelectValue placeholder="Localisation" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Toutes les spécialités</SelectItem>
-                      <SelectItem value="Vannerie">Vannerie</SelectItem>
-                      <SelectItem value="Bijouterie">Bijouterie</SelectItem>
-                      <SelectItem value="Bijoux">Bijoux</SelectItem>
-                      <SelectItem value="Textiles">Textiles</SelectItem>
-                      <SelectItem value="Sculpture">Sculpture</SelectItem>
-                      <SelectItem value="Métal">Métal</SelectItem>
-                      <SelectItem value="Tapis">Tapis</SelectItem>
+                      <SelectItem value="all">Rechercher par ville</SelectItem>
+                      {
+                        Array.from(new Set(artisans.map(a => a.location))).sort().map(loc => (
+                          <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                        ))
+                      }
                     </SelectContent>
                   </Select>
                 </div>
