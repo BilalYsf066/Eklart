@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react"
+// src/pages/Checkout.tsx
+
+import { useState, useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -10,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+
 import NavBar from "@/components/NavBar"
 import Footer from "@/components/Footer"
 import { ShoppingCart, MapPin, Mail } from "lucide-react"
@@ -20,17 +24,25 @@ import { toast } from "sonner"
 import { useNavigate } from "react-router-dom"
 import OrderSuccess from "@/components/OrderSuccess"
 
+// ⬇️ KKiaPay SDK Web
+import {
+  openKkiapayWidget,
+  addKkiapayListener,
+  removeKkiapayListener
+} from "kkiapay"
+
 const checkoutSchema = z.object({
   firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
   lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
-  email: z.email("Email invalide"),
+  email: z.string().email("Email invalide"),
   phone: z.string().min(8, "Numéro de téléphone invalide"),
   address: z.string().min(5, "Adresse complète requise"),
   city: z.string().min(2, "Ville requise"),
   postalCode: z.string().optional(),
-  paymentMethod: z.enum(["mtn_money", "moov_money", "celtiis_cash", "kkiapay", "card"] as const, { 
-    message: "Veuillez sélectionner un mode de paiement" 
-  }),
+  // on maintient le champ si tu l'utilises ailleurs, mais KKiaPay sera lancé quel que soit ce choix
+  paymentMethod: z
+    .enum(["mtn_money", "moov_money", "celtiis_cash", "kkiapay", "card"] as const)
+    .optional(),
   notes: z.string().optional(),
 })
 
@@ -52,11 +64,14 @@ interface OrderDetails {
   total: number
 }
 
-const Checkout = () => { 
+const KKIAPAY_PUBLIC_KEY = import.meta.env.VITE_KKIAPAY_PUBLIC_KEY as string
+const KKIAPAY_SANDBOX = (import.meta.env.VITE_KKIAPAY_SANDBOX === "true")
+
+const Checkout = () => {
   const { user } = useAuth()
   const { items: cartItems, _clearLocalCart } = useCart()
   const navigate = useNavigate()
-  
+
   const [isProcessing, setIsProcessing] = useState(false)
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [processedOrder, setProcessedOrder] = useState<OrderDetails | null>(null)
@@ -72,66 +87,139 @@ const Checkout = () => {
       city: "",
       postalCode: "",
       notes: "",
+      paymentMethod: "kkiapay",
     },
+    mode: "onSubmit",
   })
 
+  // Préremplissage depuis l'utilisateur connecté
   useEffect(() => {
-    if (user) {
-      form.reset({
-        firstName: user.first_name || "",
-        lastName: user.last_name || "",
-        email: user.email || "",
-        phone: user.phone || "",
-        address: "", // Will be fetched if client profile exists
-        city: "", // Will be fetched if client profile exists
-        notes: "",
-      })
-
-      // Fetch client address info
-      const fetchClientInfo = async () => {
-        try {
-          // A dedicated endpoint would be better, but we can reuse the profile one
-          const response = await api.get('/profile')
-          if(response.data.client) {
-            form.setValue('address', response.data.client.address || '')
-            form.setValue('city', response.data.client.city || '')
-          }
-        } catch (error) {
-          console.warn("Could not fetch client address info")
+    if (!user) return
+    form.reset({
+      firstName: user.first_name || "",
+      lastName: user.last_name || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      address: "",
+      city: "",
+      notes: "",
+      paymentMethod: "kkiapay",
+    })
+    ;(async () => {
+      try {
+        const response = await api.get("/profile")
+        if (response.data?.client) {
+          form.setValue("address", response.data.client.address || "")
+          form.setValue("city", response.data.client.city || "")
         }
+      } catch {
+        // profil incomplet: pas bloquant
       }
-      fetchClientInfo();
-    }
+    })()
   }, [user, form])
-  
+
+  // Redirection si panier vide (sauf pendant/juste après paiement)
   useEffect(() => {
     if (cartItems.length === 0 && !isProcessing && !showSuccessDialog) {
-      toast.info("Votre panier est vide. Redirection...")
-      navigate('/articles')
+      toast.info("Votre panier est vide. Redirection…")
+      navigate("/articles")
     }
   }, [cartItems, navigate, isProcessing, showSuccessDialog])
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const subtotal = useMemo(
+    () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [cartItems]
+  )
   const shippingCost = 2500
   const total = subtotal + shippingCost
 
-  const onSubmit = async (data: CheckoutFormData) => {
+  // Listeners KKiaPay : succès/échec
+  useEffect(() => {
+    const onSuccess = async (resp: { transactionId: string }) => {
+      try {
+        const verify = await api.post("/payments/verify", {
+          transactionId: resp.transactionId,
+        })
+        setProcessedOrder(verify.data.order as OrderDetails)
+        setShowSuccessDialog(true)
+        _clearLocalCart()
+      } catch (err: any) {
+        toast.error("Échec de vérification du paiement", {
+          description:
+            err?.response?.data?.message || "Vérification serveur impossible.",
+        })
+      }
+    }
+
+    const onFailed = () => {
+      toast.error("Paiement refusé ou annulé", {
+        description: "Aucun débit n’a été effectué.",
+      })
+    }
+
+    addKkiapayListener("success", onSuccess)
+    addKkiapayListener("failed", onFailed)
+    return () => {
+      removeKkiapayListener("success", onSuccess)
+      removeKkiapayListener("failed", onFailed)
+    }
+  }, [_clearLocalCart])
+
+  // Ouvre le widget KKiaPay
+  const openPayment = (payload: CheckoutFormData, orderId: string) => {
+    if (!KKIAPAY_PUBLIC_KEY) {
+      toast.error("Configuration paiement manquante", {
+        description:
+          "La clé publique KKiaPay n’est pas définie. Vérifiez VITE_KKIAPAY_PUBLIC_KEY.",
+      })
+      return
+    }
+
+    openKkiapayWidget({
+      amount: Math.round(total), // FCFA entier
+      api_key: KKIAPAY_PUBLIC_KEY,
+      sandbox: KKIAPAY_SANDBOX,
+      email: payload.email,
+      phone: payload.phone,
+      name: `${payload.firstName} ${payload.lastName}`,
+      // Personnalisation possible :
+      // theme: "#1E5AC9",
+      // position: "center",
+      // paymentmethod: "momo" | "card"
+      data: { orderId }, // utile à la vérif côté serveur
+    })
+  }
+
+  // Submit : créer l'ordre en pending puis ouvrir KKiaPay
+  const onSubmit = async (payload: CheckoutFormData) => {
     setIsProcessing(true)
-    
     try {
-      const response = await api.post('/orders', data)
-      setProcessedOrder(response.data)
-      setShowSuccessDialog(true)
-      _clearLocalCart()
+      const response = await api.post("/orders", {
+        ...payload,
+        items: cartItems.map((i) => ({
+          id: i.id,
+          name: i.title,
+          price: i.price,
+          quantity: i.quantity,
+        })),
+        subtotal,
+        shipping: shippingCost,
+        total,
+        status: "pending_payment",
+        provider: "kkiapay",
+      })
+      const order = response.data as { id: string }
+      openPayment(payload, order.id)
     } catch (error: any) {
-      toast.error("Erreur", {
-        description: error.response?.data?.message || "Une erreur est survenue lors de la commande."
+      toast.error("Erreur de commande", {
+        description:
+          error?.response?.data?.message || "Impossible de créer la commande.",
       })
     } finally {
       setIsProcessing(false)
     }
   }
-  
+
   return (
     <>
       <NavBar />
@@ -235,10 +323,10 @@ const Checkout = () => {
                           <FormItem>
                             <FormLabel>Adresse complète</FormLabel>
                             <FormControl>
-                              <Textarea 
+                              <Textarea
                                 placeholder="Numéro, rue, quartier, références..."
                                 className="min-h-[80px]"
-                                {...field} 
+                                {...field}
                               />
                             </FormControl>
                             <FormMessage />
@@ -276,8 +364,6 @@ const Checkout = () => {
                     </CardContent>
                   </Card>
 
-                  
-
                   {/* Notes */}
                   <Card className="bg-white rounded-xs">
                     <CardHeader>
@@ -290,10 +376,10 @@ const Checkout = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
-                              <Textarea 
+                              <Textarea
                                 placeholder="Instructions spéciales pour la livraison..."
                                 className="min-h-[80px]"
-                                {...field} 
+                                {...field}
                               />
                             </FormControl>
                             <FormMessage />
@@ -303,12 +389,12 @@ const Checkout = () => {
                     </CardContent>
                   </Card>
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className="w-full h-12 text-lg"
                     disabled={isProcessing}
                   >
-                    {isProcessing ? "Traitement en cours..." : `Confirmer la commande`}
+                    {isProcessing ? "Traitement en cours..." : "Confirmer la commande"}
                   </Button>
                 </form>
               </Form>
@@ -328,8 +414,8 @@ const Checkout = () => {
                   <div className="space-y-3">
                     {cartItems.map((item) => (
                       <div key={item.id} className="flex items-center gap-3">
-                        <img 
-                          src={item.imageUrl} 
+                        <img
+                          src={item.imageUrl}
                           alt={item.title}
                           className="w-12 h-12 object-cover rounded border"
                         />
@@ -340,7 +426,7 @@ const Checkout = () => {
                           </p>
                         </div>
                         <div className="text-sm font-medium">
-                          {(item.price * item.quantity).toLocaleString('fr-FR')} FCFA
+                          {(item.price * item.quantity).toLocaleString("fr-FR")} FCFA
                         </div>
                       </div>
                     ))}
@@ -352,16 +438,18 @@ const Checkout = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Sous-total</span>
-                      <span>{subtotal.toLocaleString('fr-FR')} FCFA</span>
+                      <span>{subtotal.toLocaleString("fr-FR")} FCFA</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Frais de livraison</span>
-                      <span>{shippingCost.toLocaleString('fr-FR')} FCFA</span>
+                      <span>{shippingCost.toLocaleString("fr-FR")} FCFA</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-semibold text-lg">
                       <span>Total</span>
-                      <span className="text-primary">{total.toLocaleString('fr-FR')} FCFA</span>
+                      <span className="text-primary">
+                        {total.toLocaleString("fr-FR")} FCFA
+                      </span>
                     </div>
                   </div>
 
@@ -387,14 +475,17 @@ const Checkout = () => {
         </div>
       </div>
       <Footer />
-      
+
       {/* Payment Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-[625px] p-0 overflow-hidden">
-          <OrderSuccess order={processedOrder} onClose={() => {
-            setShowSuccessDialog(false)
-            navigate('/')
-          }} />
+          <OrderSuccess
+            order={processedOrder}
+            onClose={() => {
+              setShowSuccessDialog(false)
+              navigate("/")
+            }}
+          />
         </DialogContent>
       </Dialog>
     </>
