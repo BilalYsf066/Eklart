@@ -72,6 +72,8 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState<'profil' | 'historique'>('profil')
   const [orders, setOrders] = useState<Order[]>([])
   const [ordersLoading, setOrdersLoading] = useState(false)
+  const [confirmingId, setConfirmingId] = useState<number | null>(null)
+  const [receiptReadyIds, setReceiptReadyIds] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -104,6 +106,30 @@ export default function Profile() {
     }
   }, [activeTab]);
 
+  const confirmReception = async (orderId: number) => {
+    try {
+      setConfirmingId(orderId)
+      // Placeholder endpoint to be implemented on backend
+      await api.post(`/orders/${orderId}/confirm-reception`)
+      // Optimistically update local state
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'livré' } : o))
+      // After confirmation, offer receipt download locally
+      setReceiptReadyIds(prev => new Set(prev).add(orderId))
+      toast.success("Réception confirmée. Merci !")
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || "Impossible de confirmer la réception pour le moment."
+      toast.error(msg)
+    } finally {
+      setConfirmingId(null)
+    }
+  }
+
+  const handleDownloadReceipt = (orderId: number) => {
+    // Placeholder action: no backend yet
+    const order = orders.find(o => o.id === orderId)
+    const label = order?.order_number ? `#${order.order_number}` : `ID ${orderId}`
+    toast.info(`Téléchargement du reçu ${label}...`)
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -455,6 +481,7 @@ export default function Profile() {
                                 <th className="p-5 font-medium">Articles</th>
                                 <th className="p-5 font-medium">Total</th>
                                 <th className="p-5 font-medium">Statut</th>
+                                <th></th>
                               </tr>
                             </thead>
                             <tbody className="divide-y">
@@ -468,14 +495,34 @@ export default function Profile() {
                                   <td className="p-5">{order.total.toLocaleString()} FCFA</td>
                                   <td className="p-5">
                                     <Badge variant={
-                                      order.status === 'livré' ? 'default' :
-                                      order.status === 'annulé' ? 'destructive' :
+                                      order.status.toLowerCase() === 'annulé' ? 'destructive' :
+                                      order.status.toLowerCase() === 'payé' ? 'default' :
+                                      order.status.toLowerCase() === 'livré' ? 'secondary' :
                                       'secondary'
                                     } className={
-                                      order.status === 'livré' ? 'bg-green-600' : ''
+                                      order.status.toLowerCase() === 'payé' ? 'bg-green-600' : ''
                                     }>
                                       {order.status}
                                     </Badge>
+                                  </td>
+                                  <td className="p-5">
+                                    <div className="flex gap-2">
+                                      {order.status.toLowerCase() === 'annulé' ? null : (
+                                        (order.status.toLowerCase() === 'payé' || receiptReadyIds.has(order.id)) ? (
+                                          <Button size="sm" variant="outline" onClick={() => handleDownloadReceipt(order.id)}>
+                                            Télécharger le reçu
+                                          </Button>
+                                        ) : (
+                                          <Button
+                                            size="sm"
+                                            disabled={order.status === 'livré' || confirmingId === order.id}
+                                            onClick={() => confirmReception(order.id)}
+                                          >
+                                            {confirmingId === order.id ? 'Confirmation…' : 'Confirmer la réception'}
+                                          </Button>
+                                        )
+                                      )}
+                                    </div>
                                   </td>
                                 </tr>
                               ))}

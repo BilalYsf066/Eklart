@@ -44,7 +44,7 @@ const ArticleCard = ({
 
   return (
     <Card 
-      className="overflow-hidden transition-all duration-300 border-border rounded-xs hover:shadow-md h-full"
+      className="overflow-hidden transition-all duration-300 border-border bg-white rounded-xs hover:shadow-md h-full"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

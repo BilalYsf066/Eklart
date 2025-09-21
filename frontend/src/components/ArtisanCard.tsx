@@ -33,7 +33,7 @@ const ArtisanCard = ({
   }
 
   return (
-    <Card data-artisan-id={id} className="overflow-hidden transition-all duration-300 border-border rounded-xs hover:shadow-md h-full">
+    <Card data-artisan-id={id} className="overflow-hidden transition-all duration-300 border-border bg-white rounded-xs hover:shadow-md h-full">
       <CardContent className="p-6">
         <div className="flex flex-col items-center text-center">
           <Avatar className="h-24 w-24 mb-4">

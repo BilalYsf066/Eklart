@@ -41,7 +41,7 @@ const Cart = () => {
         <h1 className="text-3xl font-display font-bold mb-8">Votre panier</h1>
         
         {items.length === 0 ? (
-          <div className="bg-card border p-8 rounded-xs shadow-sm text-center max-w-lg mx-auto">
+          <div className="bg-white border p-8 rounded-xs shadow-sm text-center max-w-lg mx-auto">
             <div className="flex justify-center mb-4">
               <ShoppingCart className="h-16 w-16 text-muted-foreground" />
             </div>
@@ -59,7 +59,7 @@ const Cart = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Cart items */}
             <div className="lg:col-span-2">
-              <Card className="rounded-xs">
+              <Card className="bg-white rounded-xs">
                 <CardContent className="p-0">
                   {items.map((item) => (
                     <div key={item.id} className="p-4 flex gap-4 border-b last:border-0">
@@ -115,7 +115,7 @@ const Cart = () => {
             
             {/* Order summary */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-24 rounded-xs">
+              <Card className="sticky top-24 bg-white rounded-xs">
                 <CardHeader>
                     <CardTitle>Récapitulatif</CardTitle>
                 </CardHeader>

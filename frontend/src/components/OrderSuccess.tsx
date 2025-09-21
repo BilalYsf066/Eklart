@@ -98,7 +98,7 @@ export default function OrderSuccess({ order, onClose }: OrderSuccessProps) {
               <Clock className="h-5 w-5 mt-0.5 text-blue-600 flex-shrink-0" />
               <div>
                 <p className="text-sm">
-                  Vous pouvez suivre l'état de votre commande dans la section "Mes commandes" de votre compte.
+                  Vous pouvez suivre l'état de votre commande dans la section "Historique" de votre compte.
                 </p>
               </div>
             </div>

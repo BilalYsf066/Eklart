@@ -93,6 +93,11 @@ const NavBar = () => {
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <Link to="/articles">Articles</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                   <Link to="/artisans">Artisans</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>

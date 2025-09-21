@@ -152,7 +152,7 @@ const Checkout = () => {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   {/* Personal Information */}
-                  <Card className="rounded-xs">
+                  <Card className="bg-white rounded-xs">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Mail className="h-5 w-5 text-primary" />
@@ -220,7 +220,7 @@ const Checkout = () => {
                   </Card>
 
                   {/* Shipping Address */}
-                  <Card className="rounded-xs">
+                  <Card className="bg-white rounded-xs">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <MapPin className="h-5 w-5 text-primary" />
@@ -279,7 +279,7 @@ const Checkout = () => {
                   
 
                   {/* Notes */}
-                  <Card className="rounded-xs">
+                  <Card className="bg-white rounded-xs">
                     <CardHeader>
                       <CardTitle>Notes (optionnel)</CardTitle>
                     </CardHeader>
@@ -316,7 +316,7 @@ const Checkout = () => {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-24 rounded-xs">
+              <Card className="sticky top-24 bg-white rounded-xs">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ShoppingCart className="h-5 w-5 text-primary" />
