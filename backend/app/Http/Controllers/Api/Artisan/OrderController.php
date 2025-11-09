@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api\Artisan;
 
-use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
@@ -49,6 +50,41 @@ class OrderController extends Controller
 
         return response()->json($formattedOrders);
     }
+
+
+    public function generateInvoice($orderId)
+    {
+        $artisan = Auth::user()->artisan;
+
+        $order = Order::with(['client.user', 'orderLines.article'])
+            ->whereHas('orderLines.article', function ($query) use ($artisan) {
+                $query->where('artisan_id', $artisan->id);
+            })
+            ->findOrFail($orderId);
+
+        // Filtrer les lignes de commande appartenant à l’artisan
+        $artisanOrderLines = $order->orderLines->filter(function ($line) use ($artisan) {
+            return $line->article->artisan_id === $artisan->id;
+        });
+
+        $artisanTotal = $artisanOrderLines->sum(function ($line) {
+            return $line->price * $line->quantity;
+        });
+
+        // Générer le PDF depuis une vue Blade
+        $pdf = Pdf::loadView('invoices.order', [
+            'order' => $order,
+            'artisan' => $artisan,
+            'artisanOrderLines' => $artisanOrderLines,
+            'artisanTotal' => $artisanTotal,
+        ]);
+
+        $fileName = 'facture_' . $order->order_number . '.pdf';
+
+        return $pdf->download($fileName);
+    }
+
+
 
     public function updateStatus(Request $request, Order $order)
     {

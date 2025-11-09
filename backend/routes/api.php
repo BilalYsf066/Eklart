@@ -59,6 +59,7 @@ Route::middleware(['auth:sanctum'])->prefix('artisan')->group(function () {
     Route::get('/stats', [ArtisanDashboardController::class, 'getStats']);
     Route::get('/orders', [ArtisanOrderController::class, 'index']);
     Route::put('/orders/{order}/status', [ArtisanOrderController::class, 'updateStatus']);
+    Route::get('/orders/{order}/invoice', [ArtisanOrderController::class, 'generateInvoice']);
 });
 
 // === Admin Panel Routes ===
@@ -95,6 +96,7 @@ Route::prefix('admin')->group(function () {
 
         // Orders
         Route::get('/orders', [AdminOrderController::class, 'index']);
+        Route::get('/orders/{order}/invoice', [AdminOrderController::class, 'generateInvoiceAdmin'])->name('admin.order.invoice');
 
         // Reviews
         Route::get('/reviews', [AdminReviewController::class, 'index']);

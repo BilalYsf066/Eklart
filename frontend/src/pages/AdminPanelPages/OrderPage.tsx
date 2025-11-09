@@ -3,7 +3,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable } from '@/components/data-table'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Eye } from 'lucide-react'
+import { Eye, Download } from 'lucide-react'
 import { api } from '@/lib/api'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -38,6 +38,32 @@ export default function OrderPage() {
     }
     fetchOrders()
   }, [])
+
+  const downloadInvoice = async (orderId: string) => {
+  try {
+    // Récupérer le token admin depuis le stockage si nécessaire
+    const token = localStorage.getItem('admin_token');
+
+    const response = await api.get(`/admin/orders/${orderId}/invoice`, {
+      responseType: 'blob', // très important pour recevoir le PDF
+      headers: {
+        Authorization: `Bearer ${token}`, // si auth:admin-api
+      },
+    });
+
+    // Créer une URL pour le PDF
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `facture_${orderId}.pdf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(error);
+    toast.error('Erreur lors du téléchargement de la facture.');
+  }
+};
+
 
   const currency = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' })
 
@@ -82,6 +108,19 @@ export default function OrderPage() {
           >
             <Eye className="h-4 w-4" />
           </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Télécharger la facture"
+            onClick={() => downloadInvoice(original.id)}
+            // onClick={() => {
+            //   const url = `${import.meta.env.VITE_API_URL}/admin/orders/${original.id}/invoice`
+            //   window.open(url, '_blank')
+            // }}
+          >
+            <Download className="h-4 w-4 text-[#a25016]" />
+          </Button>
         </div>
       ),
       meta: { className: 'text-right' },
@@ -102,6 +141,7 @@ export default function OrderPage() {
             <DialogTitle>Détails de la commande</DialogTitle>
           </DialogHeader>
           {current && (
+            <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <p className="text-muted-foreground text-xs">Commande</p>
@@ -128,6 +168,20 @@ export default function OrderPage() {
                 <p className="font-medium capitalize">{current.status}</p>
               </div>
             </div>
+
+            <div className="mt-6 flex justify-end">
+            <Button
+              // onClick={() => {
+              //   const url = `${import.meta.env.VITE_API_URL}/admin/orders/${current.id}/invoice`
+              //   window.open(url, '_blank')
+              // }}
+              onClick={() => downloadInvoice(current.id)}
+              className="bg-[#a25016] hover:bg-[#8b3f11]"
+            >
+              Télécharger la facture
+            </Button>
+          </div>
+          </>
           )}
         </DialogContent>
       </Dialog>

@@ -1,0 +1,7 @@
+--Install and config DOM PDF
+
+composer require barryvdh/laravel-dompdf
+
+php artisan vendor:publish --provider="Barryvdh\DomPDF\ServiceProvider"
+
+-----
