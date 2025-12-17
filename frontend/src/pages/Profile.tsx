@@ -135,6 +135,31 @@ export default function Profile() {
     const { name, value } = e.target
     setProfileData((prev: any) => ({ ...prev, [name]: value }))
   }
+
+   const downloadInvoiceClient = async (orderId: string) => {
+  try {
+    // Récupérer le token admin depuis le stockage si nécessaire
+    const token = localStorage.getItem('admin_token');
+
+    const response = await api.get(`/admin/orders/${orderId}/invoice`, {
+      responseType: 'blob', // très important pour recevoir le PDF
+      headers: {
+        Authorization: `Bearer ${token}`, // si auth:admin-api
+      },
+    });
+
+    // Créer une URL pour le PDF
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `facture_${orderId}.pdf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(error);
+    toast.error('Erreur lors du téléchargement de la facture.');
+  }
+};
   
   const handleClientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -520,8 +545,15 @@ export default function Profile() {
                                           >
                                             {confirmingId === order.id ? 'Confirmation…' : 'Confirmer la réception'}
                                           </Button>
+                                          
                                         )
                                       )}
+                                      <Button
+                                            size="sm"
+                                            onClick={() => downloadInvoiceClient(order.id)}
+                                          >
+                                            Facture
+                                          </Button>
                                     </div>
                                   </td>
                                 </tr>

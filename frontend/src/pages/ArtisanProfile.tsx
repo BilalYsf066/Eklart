@@ -95,7 +95,7 @@ const MOCK_ARTISANS = [
 // Build lightweight mock catalogue per artisan (for display only)
 const buildMockCatalogue = (artisan: { id: number; name: string }) => {
   const baseImages = [
-    "https://images.unsplash.com/photo-1590422749897-47236d4555c8?auto=format&fit=crop&w=800&q=80",
+    "https://creationsdici.ca/images/creations-dici/boutique-artisanat/img-top-boutique-artisanat.jpg",
     "https://images.unsplash.com/photo-1600721391689-2564bb8055de?auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1582210449638-91b2e7825b02?auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1581539250439-c96689b516dd?auto=format&fit=crop&w=800&q=80",
